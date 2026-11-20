@@ -1,0 +1,24 @@
+# 构建产物与二进制
+.build/
+dist/*.idsig
+# 最新一版 APK 单独放行
+dist/*.apk
+vendor/jdk/
+vendor/r8.jar
+vendor/android.jar
+vendor/uber-apk-signer.jar
+vendor/*.log
+
+# 依赖与本地工具
+node_modules/
+.tools/node_modules/
+
+# 运行时数据
+data/
+*.bak
+*.b64
+DSH-Go/
+
+# 本地调试脚本（含绝对路径）
+.tools/
+.agent-teams/

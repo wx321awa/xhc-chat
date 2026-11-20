@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ededed">
+<title>私人聊天</title>
+<link rel="stylesheet" href="./style.css">
+<!-- config.js 由打包注入（window.PRIVCHAT_DEFAULT）；缺失时 app.js 回退 ws://127.0.0.1:21001/ws -->
+<script src="./config.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ======================= 消息（会话列表） ======================= -->
+  <section class="screen active" id="screen-list">
+    <header class="bar bar-list">
+      <h1 class="bar-title" id="list-title">私人聊天</h1>
+      <div class="bar-right">
+        <span class="status-pill" id="status-pill" role="status">
+          <i class="dot" id="status-dot"></i><span id="status-text">未连接</span>
+        </span>
+      </div>
+    </header>
+    <button class="connect-cta" id="connect-cta" type="button">
+      <span class="cta-dot"></span>未连接 · 点这里填昵称和服务器
+    </button>
+
+    <div class="list-scroll" id="list-scroll">
+      <ul class="conv-list" id="conv-list"></ul>
+      <div class="empty" id="empty-state" hidden>
+        <div class="empty-art" aria-hidden="true">💬</div>
+        <p class="empty-title">还没有会话</p>
+        <p class="empty-sub">点下面的「我」填好昵称和服务器，连上后<br>这里就会出现和你聊天的人</p>
+      </div>
+      <p class="byline">制作 by xxhh.</p>
+    </div>
+  </section>
+
+  <!-- ======================= 聊天页 ======================= -->
+  <section class="screen" id="screen-chat">
+    <header class="bar bar-chat">
+      <button class="back-btn" id="btn-back" type="button" aria-label="返回">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M15.4 4.6 8 12l7.4 7.4 1.4-1.4L10.8 12l6-6z"/></svg>
+      </button>
+      <div class="chat-title-wrap">
+        <div class="px-title-row">
+          <span class="px-chat-avatar" id="px-chat-avatar" hidden></span>
+          <h1 class="bar-title chat-title" id="chat-title">聊天</h1>
+        </div>
+        <span class="chat-sub" id="chat-sub"></span>
+      </div>
+      <div class="bar-right">
+        <button class="icon-btn" id="btn-chat-info" type="button" title="会话信息" aria-label="会话信息">···</button>
+      </div>
+    </header>
+
+    <div class="chat-scroll" id="chat-scroll">
+      <div class="msg-list" id="msg-list"></div>
+    </div>
+
+    <div class="banner" id="offline-banner" hidden>当前未连接，消息发不出去 · 正在自动重连…</div>
+
+    <form class="composer" id="composer" autocomplete="off">
+      <button class="px-plus" id="px-plus" type="button" aria-label="发送图片或视频">＋</button>
+      <input class="composer-input" id="composer-input" type="text" maxlength="4000"
+             placeholder="说点什么…" aria-label="消息输入框" enterkeyhint="send">
+      <button class="send-btn" id="btn-send" type="submit" disabled>发送</button>
+    </form>
+  </section>
+
+  <!-- ======================= 我（连接设置） ======================= -->
+  <section class="screen" id="screen-me">
+    <header class="bar bar-me">
+      <h1 class="bar-title">我</h1>
+      <div class="bar-right">
+        <span class="status-pill" id="status-pill-2"><i class="dot" id="status-dot-2"></i><span id="status-text-2">未连接</span></span>
+      </div>
+    </header>
+
+    <div class="settings-scroll">
+      <div class="profile">
+        <button class="px-avatar-btn" id="px-avatar-open" type="button" aria-label="更换头像">
+          <span class="avatar" id="me-avatar">我</span>
+          <span class="px-avatar-badge" aria-hidden="true">✎</span>
+        </button>
+        <div class="profile-main">
+          <div class="profile-name" id="me-name-label">未设置昵称</div>
+          <div class="profile-id mono">ID <span id="my-id">—</span></div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field px-avatar-row">
+          <span class="field-label">头像</span>
+          <span class="px-avatar-hint" id="px-avatar-hint">点头像换一张</span>
+          <button class="px-mini-btn" id="px-avatar-clear" type="button">清除</button>
+        </div>
+      </div>
+      <input type="file" id="px-avatar-file" accept="image/*" hidden>
+
+      <div class="field-group">
+        <div class="field no-border">
+          <label class="field-label" for="inp-name">昵称</label>
+          <input class="field-input" id="inp-name" type="text" maxlength="24"
+                 placeholder="1–24 个字" autocomplete="nickname">
+        </div>
+      </div>
+
+      <div class="field-group" id="net-fields">
+        <div class="field">
+          <label class="field-label" for="inp-endpoint">服务器</label>
+          <input class="field-input mono" id="inp-endpoint" type="text" inputmode="url"
+                 placeholder="ws://127.0.0.1:21001/ws" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label class="field-label" for="inp-key">通行码</label>
+          <input class="field-input mono" id="inp-key" type="text" placeholder="必填"
+                 autocapitalize="off" spellcheck="false">
+        </div>
+      </div>
+
+      <div class="host-row">
+        <div class="host-text">
+          <div class="host-title">本机当主机</div>
+          <div class="host-sub">切到本机 Hub（127.0.0.1:21001），通行码用同一份</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="sw-host">
+          <span class="track"><span class="knob"></span></span>
+        </label>
+      </div>
+
+      <div class="host-row" id="notify-row">
+        <div class="host-text">
+          <div class="host-title">后台提醒</div>
+          <div class="host-sub" id="notify-sub">关掉 App 也能收到新消息（常驻一条通知，略费电）</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="sw-notify">
+          <span class="track"><span class="knob"></span></span>
+        </label>
+      </div>
+
+      <div class="conn-error" id="conn-error" hidden></div>
+
+      <p class="hint" id="hint-peer">别人连 <code id="peer-endpoint">ws://&lt;你的IP&gt;:21001/ws</code>，通行码要和这里一致</p>
+
+      <div class="btn-row">
+        <button class="primary-btn" id="btn-connect" type="button">连接</button>
+        <button class="ghost-btn" id="btn-disconnect" type="button" hidden>断开</button>
+      </div>
+
+      <div class="settings-foot">
+        <p>协议 v1.2 · 明文 ws（同 WiFi 或公网中继）</p>
+        <p class="tiny">hello → welcome；20s 心跳；断开后 1s / 2s / 4s / 8s / 15s 自动重连，重连后自动拉 history。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 底部 tab ======================= -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" id="tab-list" type="button" aria-label="消息">
+      <span class="tab-ico" aria-hidden="true">💬</span>
+      <span class="tab-txt">消息</span>
+    </button>
+    <button class="tab" id="tab-me" type="button" aria-label="我">
+      <span class="tab-ico" aria-hidden="true">👤</span>
+      <span class="tab-txt">我</span>
+    </button>
+  </nav>
+
+  <!-- ======================= v1.2 浮层：头像 / 群名 / 图片视频 / 全屏预览 ======================= -->
+  <input type="file" id="px-file-image" accept="image/*" hidden>
+  <input type="file" id="px-file-video" accept="video/*" hidden>
+
+  <div class="px-sheet" id="px-media-sheet" hidden>
+    <div class="px-sheet-card">
+      <button class="px-sheet-btn" id="px-pick-image" type="button"><span class="px-sheet-ico">🖼</span>图片</button>
+      <button class="px-sheet-btn" id="px-pick-video" type="button"><span class="px-sheet-ico">🎬</span>视频</button>
+      <button class="px-sheet-cancel" id="px-media-cancel" type="button">取消</button>
+    </div>
+  </div>
+
+  <div class="px-modal" id="px-group-modal" hidden>
+    <div class="px-modal-card" role="dialog" aria-modal="true" aria-labelledby="px-group-heading">
+      <h2 class="px-modal-title" id="px-group-heading">修改群名</h2>
+      <input class="px-modal-input" id="px-group-input" type="text" maxlength="24"
+             placeholder="1–24 个字" autocomplete="off">
+      <div class="px-modal-hint"><span id="px-group-count">0</span>/24</div>
+      <input type="file" id="px-group-avatar-file" accept="image/*" hidden>
+      <div class="px-group-avatar-row">
+        <button class="px-modal-btn" id="px-group-avatar" type="button">换群头像</button>
+        <button class="px-modal-btn" id="px-group-avatar-clear" type="button">清除</button>
+      </div>
+      <div class="px-modal-actions">
+        <button class="px-modal-btn" id="px-group-cancel" type="button">取消</button>
+        <button class="px-modal-btn primary" id="px-group-ok" type="button">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-lightbox" id="px-lightbox" hidden>
+    <button class="px-lightbox-close" id="px-lightbox-close" type="button" aria-label="关闭">✕</button>
+    <div class="px-lightbox-body" id="px-lightbox-body"></div>
+  </div>
+
+  <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+  <div class="mock-badge" id="mock-badge" hidden>MOCK</div>
+</div>
+<script src="./app.js"></script>
+</body>
+</html>
